@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.0.3] - 2026-10-08
+
+- Added a concise German end-user guide for ERPNext and Outlook.
+
 ## [0.0.2] - 2026-10-08
 
 - Added AI contributor instructions for mandatory version bumps and change logging.

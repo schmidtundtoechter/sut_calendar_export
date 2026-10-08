@@ -16,6 +16,9 @@ bench get-app $URL_OF_THIS_REPO --branch develop
 bench install-app sut_calendar_export
 ```
 
+Eine einfache deutsche Anleitung fuer Anwender steht in
+[docs/kundenanleitung.md](docs/kundenanleitung.md).
+
 ### Funktionsweise
 
 Der Feed ist eine dynamisch erzeugte iCalendar-Datei (`.ics`). Bei jedem Abruf

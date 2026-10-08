@@ -5,6 +5,8 @@ app_description = "Outlook calendar feeds for ERPNext ToDos"
 app_email = "me@matthiaskittner.de"
 app_license = "mit"
 
+fixtures = []
+
 # Apps
 # ------------------
 

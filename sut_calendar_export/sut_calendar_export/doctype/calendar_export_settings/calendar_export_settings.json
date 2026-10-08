@@ -1,0 +1,50 @@
+{
+ "actions": [],
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "enabled",
+  "feed_url",
+  "feed_token",
+  "information"
+ ],
+ "fields": [
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enable Calendar Feed"
+  },
+  {
+   "description": "Subscribe to this URL in Outlook. The feed is read-only and always contains the current dated ToDos.",
+   "fieldname": "feed_url",
+   "fieldtype": "Data",
+   "label": "Outlook Feed URL",
+   "read_only": 1
+  },
+  {
+   "description": "Changing this secret invalidates subscriptions using the previous feed URL.",
+   "fieldname": "feed_token",
+   "fieldtype": "Password",
+   "label": "Feed Token"
+  },
+  {
+   "fieldname": "information",
+   "fieldtype": "HTML",
+   "options": "<p>ERPNext exports ToDos with a due date as all-day events. Outlook can read this feed but cannot write changes back to ERPNext.</p>"
+  }
+ ],
+ "issingle": 1,
+ "links": [],
+ "module": "Sut Calendar Export",
+ "name": "Calendar Export Settings",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  }
+ ]
+}

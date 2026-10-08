@@ -12,6 +12,14 @@ bench get-app $URL_OF_THIS_REPO --branch develop
 bench install-app sut_calendar_export
 ```
 
+### Outlook Feed
+
+After installing the app, open **Calendar Export Settings** as a System Manager
+and copy the generated **Outlook Feed URL** into Outlook's "Subscribe from web"
+dialog. The endpoint generates an up-to-date iCalendar (`.ics`) feed for every
+ToDo with a due date. It is intentionally one-way: changes in Outlook are not
+written back to ERPNext.
+
 ### Contributing
 
 This app uses `pre-commit` for code formatting and linting. Please [install pre-commit](https://pre-commit.com/#installation) and enable it for this repository:

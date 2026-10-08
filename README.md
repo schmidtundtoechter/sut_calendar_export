@@ -1,95 +1,85 @@
-### SUT Calendar Export
+# SUT Calendar Export
 
-`sut_calendar_export` stellt ERPNext-ToDos als abonnierten Outlook-Kalender
-bereit. ERPNext ist dabei die lesende Quelle des Feeds: Outlook kann die
-Kalendereintraege anzeigen, aber keine Aenderungen nach ERPNext zurueckschreiben.
-Der Outlook-Kalender bleibt damit das datenfuehrende System fuer seine eigenen
-Kalendereintraege.
+## Deutsch
+
+SUT Calendar Export stellt ERPNext-ToDos als abonnierbaren Outlook-Kalender bereit. ERPNext liefert den Feed nur lesend aus: Outlook kann die Kalendereinträge anzeigen, Änderungen in Outlook werden jedoch nicht nach ERPNext zurückgeschrieben.
 
 ### Installation
 
-You can install this app using the [bench](https://github.com/frappe/bench) CLI:
-
-```bash
+~~~bash
 cd $PATH_TO_YOUR_BENCH
 bench get-app $URL_OF_THIS_REPO --branch develop
 bench install-app sut_calendar_export
-```
+~~~
 
-Eine einfache deutsche Anleitung fuer Anwender steht in
-[docs/kundenanleitung.md](docs/kundenanleitung.md).
+Eine einfache Anleitung für Anwender steht in [docs/kundenanleitung.md](docs/kundenanleitung.md).
 
 ### Funktionsweise
 
-Der Feed ist eine dynamisch erzeugte iCalendar-Datei (`.ics`). Bei jedem Abruf
-liest ERPNext die aktuellen ToDos und liefert den Kalender sofort neu aus. Es
-gibt daher keinen Dateiexport und keinen zeitgesteuerten ERPNext-Job, der
-veralten kann. Wie schnell eine Aenderung in Outlook sichtbar wird, bestimmt
-Outlook beziehungsweise Microsoft durch den eigenen Aktualisierungsrhythmus;
-ERPNext stellt beim naechsten Abruf stets den aktuellen Stand bereit.
+Der Feed ist eine dynamisch erzeugte iCalendar-Datei (.ics). Bei jedem Abruf liest ERPNext die aktuellen ToDos und liefert den Kalender neu aus. Es gibt keinen manuellen Dateiexport und keinen zeitgesteuerten ERPNext-Job. Wann eine Änderung in Outlook sichtbar wird, bestimmt Outlook beziehungsweise Microsoft durch den eigenen Aktualisierungsrhythmus.
 
-Jedes ToDo mit einem gesetzten Faelligkeitsdatum erscheint als ganztagiger
-Kalendereintrag. Exportiert werden Beschreibung, Prioritaet, Zuweisung und
-optional die verknuepfte ERPNext-Referenz. Abgeschlossene und stornierte ToDos
-werden mit dem passenden Kalenderstatus uebertragen. ToDos ohne
-Faelligkeitsdatum koennen technisch nicht als Kalendereintrag dargestellt
-werden und werden deshalb nicht exportiert.
+Jedes ToDo mit einem Datum im Feld Date wird als ganztägiger Kalendereintrag exportiert. Beschreibung, Priorität, Zuweisung und gegebenenfalls eine ERPNext-Referenz werden übernommen. ToDos ohne Datum können technisch nicht als Kalendereintrag dargestellt werden und werden daher nicht exportiert.
 
-### Einrichtung In ERPNext
+### Einrichtung in ERPNext
 
-1. Stelle sicher, dass jedes zu exportierende **ToDo** im Standard-DocType
-   `ToDo` ein Faelligkeitsdatum im Feld `Date` besitzt.
-2. Melde dich als Benutzer mit der Rolle **System Manager** an und oeffne den
-   Singleton-DocType **Calendar Export Settings**.
-3. Aktiviere **Enable Calendar Feed** und speichere. Beim ersten Speichern
-   erzeugt die App einen individuellen Token und die **Outlook Feed URL**.
-4. Kopiere die angezeigte URL in Outlook ueber "Kalender hinzufuegen" und
-   anschliessend "Aus dem Internet abonnieren" (die genaue Bezeichnung kann je
-   nach Outlook-Version abweichen).
+1. Für jedes zu exportierende ToDo im Standard-DocType ToDo ein Datum im Feld Date hinterlegen.
+2. Als Benutzer mit der Rolle System Manager nach Calendar Export Settings suchen und den DocType öffnen.
+3. Enable Calendar Feed aktivieren und speichern. Beim ersten Speichern erzeugt die App die Outlook Feed URL.
+4. In Outlook Kalender hinzufügen und anschließend Aus dem Internet abonnieren wählen. Die Outlook Feed URL einfügen und bestätigen.
 
-Folgende DocTypes sind beteiligt:
+Beteiligt sind die DocTypes ToDo als Datenquelle und Calendar Export Settings als zentrale, nur für System Manager verfügbare Konfiguration.
 
-- `ToDo`: Quelle aller exportierten Aufgaben; das Feld `Date` entscheidet, ob
-  ein Kalendereintrag erzeugt werden kann.
-- `Calendar Export Settings`: App-Einstellungen pro ERPNext-Site. Hier werden
-  Aktivierung, die abonnierbare URL und der Token verwaltet. Dieser DocType ist
-  ausschliesslich fuer System Manager vorgesehen.
+### Sicherheit
 
-### Sicherheit Des Feed-Tokens
+Die Outlook Feed URL enthält einen persönlichen Token und ist wie ein Passwort zu behandeln. Wer die URL kennt, kann die exportierten ToDo-Informationen lesen. Die URL darf daher nicht in Tickets, Screenshots, Quellcode oder öffentliche Dokumente gelangen. Wenn der Token geändert wird, wird die bisherige URL ungültig; das Outlook-Abonnement muss anschließend mit der neuen URL eingerichtet werden.
 
-Die Feed-URL enthaelt einen zufaelligen Token und ist damit wie ein Passwort zu
-behandeln. Wer die URL kennt, kann alle exportierten ToDo-Informationen lesen.
-Teile sie deshalb nur mit dem vorgesehenen Outlook-Konto und hinterlege sie
-nicht in Tickets, Screenshots, Quellcode oder oeffentlichen Dokumenten.
+## English
 
-Wird der Token in **Calendar Export Settings** geaendert, ist die alte URL
-ungueltig. Aktualisiere dann auch das Outlook-Abonnement mit der neu erzeugten
-URL.
+SUT Calendar Export provides ERPNext ToDos as a subscribable Outlook calendar. ERPNext serves the feed as read-only: Outlook can display the calendar entries, but changes made in Outlook are not written back to ERPNext.
 
-### Contributing
+### Installation
 
-This app uses `pre-commit` for code formatting and linting. Please [install pre-commit](https://pre-commit.com/#installation) and enable it for this repository:
+~~~bash
+cd $PATH_TO_YOUR_BENCH
+bench get-app $URL_OF_THIS_REPO --branch develop
+bench install-app sut_calendar_export
+~~~
 
-```bash
+A simple German end-user guide is available at [docs/kundenanleitung.md](docs/kundenanleitung.md).
+
+### How It Works
+
+The feed is generated dynamically as an iCalendar (.ics) file. Whenever Outlook requests it, ERPNext reads the current ToDos and returns a fresh calendar. There is no manual file export and no scheduled ERPNext job. Outlook or Microsoft controls how quickly a change becomes visible in Outlook.
+
+Each ToDo with a value in the Date field is exported as an all-day calendar entry. The description, priority, assignment, and an optional ERPNext reference are included. ToDos without a date cannot be represented as calendar events and are therefore not exported.
+
+### ERPNext Setup
+
+1. Add a value to the Date field on every standard ToDo that should be exported.
+2. As a user with the System Manager role, open Calendar Export Settings.
+3. Enable the calendar feed and save. The app generates the Outlook Feed URL on the first save.
+4. In Outlook, choose Add calendar and then Subscribe from web. Paste the Outlook Feed URL and confirm the subscription.
+
+The relevant DocTypes are ToDo as the source of calendar data and Calendar Export Settings as the central configuration, available only to System Managers.
+
+### Security
+
+The Outlook Feed URL contains a personal token and must be treated like a password. Anyone with the URL can read the exported ToDo information. Do not share it in tickets, screenshots, source code, or public documents. Changing the token invalidates the old URL, so the Outlook subscription must be updated with the new URL.
+
+## Contributing
+
+This app uses pre-commit for formatting and linting.
+
+~~~bash
 cd apps/sut_calendar_export
 pre-commit install
-```
+~~~
 
-Pre-commit is configured to use the following tools for checking and formatting your code:
+## CI
 
-- ruff
-- eslint
-- prettier
-- pyupgrade
+- CI installs the app and runs unit tests on every push to the develop branch.
+- Linters run Frappe Semgrep Rules and pip-audit on every pull request.
 
-### CI
+## License
 
-This app can use GitHub Actions for CI. The following workflows are configured:
-
-- CI: Installs this app and runs unit tests on every push to `develop` branch.
-- Linters: Runs [Frappe Semgrep Rules](https://github.com/frappe/semgrep-rules) and [pip-audit](https://pypi.org/project/pip-audit/) on every pull request.
-
-
-### License
-
-mit
+MIT

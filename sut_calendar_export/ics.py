@@ -3,23 +3,56 @@
 from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta
+from html import escape
+from urllib.parse import quote
 
 import frappe
-from frappe.utils import get_datetime, strip_html
+from frappe.utils import get_datetime, get_url, slug, strip_html
 
 
 def build_todo_calendar() -> str:
 	"""Build an RFC 5545 calendar containing every ToDo with a due date."""
+	link_fields = [
+		field
+		for field in frappe.get_meta("ToDo").fields
+		if field.fieldtype in ("Link", "Dynamic Link")
+		and field.fieldname
+		not in ("reference_type", "allocated_to", "assigned_by", "role", "assignment_rule")
+		and field.options
+	]
+	fields = [
+		"name",
+		"date",
+		"description",
+		"status",
+		"priority",
+		"allocated_to",
+		"reference_type",
+		"reference_name",
+		"modified",
+	]
+	for field in link_fields:
+		fields.append(field.fieldname)
+		if field.fieldtype == "Dynamic Link":
+			fields.append(field.options)
 	todos = frappe.get_all(
 		"ToDo",
 		filters={"date": ["is", "set"]},
-		fields=["name", "date", "description", "status", "priority", "allocated_to", "reference_type", "reference_name", "modified"],
+		fields=list(dict.fromkeys(fields)),
 		order_by="date asc, modified desc",
 	)
-	return build_calendar(todos, frappe.local.site)
+	for todo in todos:
+		todo["linked_documents"] = [
+			(
+				field.options if field.fieldtype == "Link" else todo.get(field.options),
+				todo.get(field.fieldname),
+			)
+			for field in link_fields
+		]
+	return build_calendar(todos, frappe.local.site, get_url())
 
 
-def build_calendar(todos: list[dict], site_name: str) -> str:
+def build_calendar(todos: list[dict], site_name: str, base_url: str | None = None) -> str:
 	"""Serialize ToDo mappings as a portable all-day iCalendar feed."""
 	lines = [
 		"BEGIN:VCALENDAR",
@@ -31,16 +64,16 @@ def build_calendar(todos: list[dict], site_name: str) -> str:
 	]
 
 	for todo in todos:
-		lines.extend(_todo_to_event(todo, site_name))
+		lines.extend(_todo_to_event(todo, site_name, base_url or f"https://{site_name}"))
 
 	lines.append("END:VCALENDAR")
 	return "\r\n".join(_fold_ical_line(line) for line in lines) + "\r\n"
 
 
-def _todo_to_event(todo: dict, site_name: str) -> list[str]:
+def _todo_to_event(todo: dict, site_name: str, base_url: str) -> list[str]:
 	due_date = _as_date(todo.get("date"))
 	summary = _todo_summary(todo)
-	description = _todo_description(todo)
+	description = _todo_description(todo, base_url)
 	status = {"Closed": "COMPLETED", "Cancelled": "CANCELLED"}.get(todo.get("status"), "CONFIRMED")
 	modified = get_datetime(todo.get("modified") or datetime.now())
 
@@ -53,6 +86,7 @@ def _todo_to_event(todo: dict, site_name: str) -> list[str]:
 		f"DTEND;VALUE=DATE:{(due_date + timedelta(days=1)).strftime('%Y%m%d')}",
 		f"SUMMARY:{_escape_ical(summary)}",
 		f"DESCRIPTION:{_escape_ical(description)}",
+		f"X-ALT-DESC;FMTTYPE=text/html:{_escape_ical(_description_html(description))}",
 		f"STATUS:{status}",
 		"CATEGORIES:ERPNext ToDo",
 		"TRANSP:TRANSPARENT",
@@ -65,15 +99,34 @@ def _todo_summary(todo: dict) -> str:
 	return text.splitlines()[0] if text else f"ToDo {todo.get('name')}"
 
 
-def _todo_description(todo: dict) -> str:
+def _todo_description(todo: dict, base_url: str) -> str:
 	parts = [strip_html(todo.get("description") or "").strip()]
 	if todo.get("priority"):
 		parts.append(f"Priority: {todo.get('priority')}")
 	if todo.get("allocated_to"):
 		parts.append(f"Allocated to: {todo.get('allocated_to')}")
-	if todo.get("reference_type") and todo.get("reference_name"):
-		parts.append(f"Reference: {todo.get('reference_type')} {todo.get('reference_name')}")
-	return "\n".join(part for part in parts if part)
+	documents = [("ToDo", todo.get("name")), (todo.get("reference_type"), todo.get("reference_name"))]
+	documents.extend(todo.get("linked_documents") or [])
+	seen = set()
+	links = []
+	for doctype, name in documents:
+		if not doctype or not name or (doctype, name) in seen:
+			continue
+		seen.add((doctype, name))
+		url = f"{base_url.rstrip('/')}/app/{quote(slug(doctype), safe='')}/{quote(str(name), safe='')}"
+		links.append(f"Link zum {doctype} ({name}):\n{url}")
+	return "\n\n".join(["\n".join(part for part in parts if part), *links]).strip()
+
+
+def _description_html(description: str) -> str:
+	"""Provide explicit hyperlinks for Outlook, with a plain-text fallback."""
+	lines = []
+	for line in description.split("\n"):
+		text = escape(line)
+		if line.startswith(("https://", "http://")):
+			text = f'<a href="{text}">{text}</a>'
+		lines.append(text)
+	return "<html><body>" + "<br>".join(lines) + "</body></html>"
 
 
 def _as_date(value) -> date:
@@ -85,7 +138,14 @@ def _as_date(value) -> date:
 
 
 def _escape_ical(value: str) -> str:
-	return str(value).replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,").replace("\r\n", "\\n").replace("\n", "\\n")
+	return (
+		str(value)
+		.replace("\\", "\\\\")
+		.replace(";", "\\;")
+		.replace(",", "\\,")
+		.replace("\r\n", "\\n")
+		.replace("\n", "\\n")
+	)
 
 
 def _fold_ical_line(line: str) -> str:

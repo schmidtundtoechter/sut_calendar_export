@@ -41,7 +41,14 @@ Microsoft; das kann etwas Zeit in Anspruch nehmen.
 
 Pro datierter ERPNext-Aufgabe wird ein ganztagiger Kalendereintrag erzeugt.
 Neben der Aufgabenbeschreibung koennen Prioritaet, Zuweisung und eine
-ERPNext-Referenz angezeigt werden. Abgeschlossene oder stornierte Aufgaben
+ERPNext-Referenz angezeigt werden. Der Termintext enthaelt einen beschrifteten
+Link zum ToDo und darunter Links zu direkt am ToDo verknuepften Datensaetzen,
+jeweils mit einer Leerzeile dazwischen. Auch zusaetzliche Link- und Dynamic-Link-
+Felder am ToDo werden beruecksichtigt; doppelte Links werden nur einmal angezeigt.
+Datensaetze, die erst innerhalb der Referenz verknuepft sind, werden nicht weiter
+verfolgt. Beim Oeffnen der Links gelten die normale ERPNext-Anmeldung und die
+Zugriffsrechte. Die ERPNext-Adresse muss vom verwendeten Rechner erreichbar sein.
+Abgeschlossene oder stornierte Aufgaben
 bleiben im Kalender mit ihrem jeweiligen Status erkennbar.
 
 ## Wichtiger Sicherheitshinweis
